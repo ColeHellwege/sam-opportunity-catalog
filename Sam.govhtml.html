@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAM.gov Opportunity Catalog — Onodi Tool and Engineering</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;background:#f4f6f9;color:#222;min-height:100vh}
+  header{background:#1F3864;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+  header h1{font-size:20px;font-weight:700;letter-spacing:0.3px}
+  header span{font-size:12px;opacity:0.7}
+  .container{max-width:1100px;margin:0 auto;padding:24px 16px}
+  .card{background:#fff;border-radius:10px;border:1px solid #dde3ec;padding:20px;margin-bottom:20px}
+  .card h2{font-size:15px;font-weight:700;color:#1F3864;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:4px}
+  input,select{width:100%;padding:9px 12px;border:1px solid #ccd3dd;border-radius:6px;font-size:13px;font-family:Arial,sans-serif;background:#fff;color:#222}
+  input:focus,select:focus{outline:none;border-color:#2E75B6;box-shadow:0 0 0 3px rgba(46,117,182,0.12)}
+  .btn{padding:9px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:background 0.15s,transform 0.1s}
+  .btn:active{transform:scale(0.97)}
+  .btn-primary{background:#2E75B6;color:#fff}
+  .btn-primary:hover{background:#1F5A96}
+  .btn-success{background:#1D8348;color:#fff}
+  .btn-success:hover{background:#166038}
+  .btn-danger{background:#C0392B;color:#fff}
+  .btn-danger:hover{background:#922B21}
+  .btn-sm{padding:5px 14px;font-size:12px}
+  .search-row{display:flex;gap:10px;margin-bottom:12px}
+  .search-row input{flex:1}
+  .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+  .results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:13px;color:#666}
+  .opp-card{border:1px solid #dde3ec;border-radius:8px;padding:14px 16px;margin-bottom:10px;background:#fff;transition:border-color 0.15s}
+  .opp-card:hover{border-color:#2E75B6}
+  .opp-card.saved{border-left:4px solid #1D8348}
+  .opp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+  .opp-title{font-size:14px;font-weight:700;color:#1F3864;line-height:1.4;flex:1}
+  .opp-actions{display:flex;gap:6px;flex-shrink:0}
+  .badge{font-size:11px;padding:2px 9px;border-radius:20px;font-weight:700;white-space:nowrap}
+  .badge-blue{background:#D6E4F0;color:#1F5A96}
+  .badge-purple{background:#EBD5FA;color:#6C3483}
+  .badge-gray{background:#EAECEE;color:#555}
+  .badge-green{background:#D5F5E3;color:#1D6A3A}
+  .opp-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .opp-footer{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#666}
+  .due-soon{color:#B7770D;font-weight:700}
+  .due-urgent{color:#C0392B;font-weight:700}
+  .tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid #dde3ec}
+  .tab{padding:10px 20px;font-size:14px;font-weight:700;border:none;background:none;cursor:pointer;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tab.active{color:#1F3864;border-bottom-color:#2E75B6}
+  .empty{text-align:center;padding:40px;color:#aaa;font-size:14px}
+  .loading{text-align:center;padding:40px;color:#2E75B6;font-size:14px}
+  .status-bar{padding:10px 16px;border-radius:6px;font-size:13px;margin-bottom:16px;display:none}
+  .status-success{background:#D5F5E3;color:#1D6A3A;border:1px solid #A9DFBF}
+  .status-error{background:#FDEDEC;color:#922B21;border:1px solid #F5B7B1}
+  .status-info{background:#D6E4F0;color:#1F5A96;border:1px solid #AED6F1}
+  .config-status{font-size:12px;padding:4px 12px;border-radius:20px;font-weight:700}
+  .config-ok{background:#D5F5E3;color:#1D6A3A}
+  .config-missing{background:#FDEDEC;color:#922B21}
+  .saved-count{background:#2E75B6;color:#fff;border-radius:20px;font-size:11px;padding:1px 8px;margin-left:6px}
+  .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:12px;padding:24px;width:90%;max-width:500px;max-height:80vh;overflow-y:auto}
+  .modal h3{font-size:16px;font-weight:700;color:#1F3864;margin-bottom:16px}
+  .modal-field{margin-bottom:12px}
+  .modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+  @media(max-width:600px){.setup-grid{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#127919; SAM.gov Opportunity Catalog</h1>
+  <span>Onodi Tool and Engineering</span>
+</header>
+
+<div class="container">
+
+  <!-- Config Card -->
+  <div class="card" id="config-card">
+    <h2>&#9881;&#65039; Configuration
+      <span class="config-status config-missing" id="config-status">Not configured</span>
+    </h2>
+    <div class="setup-grid">
+      <div>
+        <label>SAM.gov API Key</label>
+        <input type="password" id="cfg-apikey" placeholder="Paste your SAM.gov API key…" />
+      </div>
+      <div>
+        <label>SharePoint Site URL</label>
+        <input type="text" id="cfg-spsite" placeholder="https://onoditool1.sharepoint.com/sites/…" value="https://onoditool1.sharepoint.com/sites/OnodiToolandEngineering-RFQQuotingSales" />
+      </div>
+      <div>
+        <label>SharePoint List Name</label>
+        <input type="text" id="cfg-splist" placeholder="SAM Opportunities" value="SAM Opportunities" />
+      </div>
+      <div>
+        <label>Azure Client ID</label>
+        <input type="text" id="cfg-clientid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value="1546dde9-2558-4e1a-93d3-55888faa0d6e" />
+      </div>
+      <div>
+        <label>Azure Tenant ID</label>
+        <input type="text" id="cfg-tenantid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" value="ab3934e8-550a-4b1d-8e5b-1e03dbb78b1c" />
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-primary" onclick="saveConfig()" style="width:100%">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status-bar" class="status-bar"></div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('search',this)">&#128269; Search SAM.gov</button>
+    <button class="tab" onclick="switchTab('saved',this)">&#128278; Saved <span class="saved-count" id="saved-count">0</span></button>
+  </div>
+
+  <!-- Search Tab -->
+  <div id="tab-search">
+    <div class="card">
+      <h2>&#128269; Search Opportunities</h2>
+      <div class="search-row">
+        <input type="text" id="kw" placeholder="Keywords — e.g. machining, tooling, HVAC, IT services…" />
+        <button class="btn btn-primary" onclick="search()">Search</button>
+      </div>
+      <div class="filters">
+        <div>
+          <label>Notice Type</label>
+          <select id="f-type">
+            <option value="">All types</option>
+            <option value="o">Solicitation</option>
+            <option value="p">Presolicitation</option>
+            <option value="k">Combined Synopsis</option>
+            <option value="r">Sources Sought</option>
+            <option value="g">Grant</option>
+          </select>
+        </div>
+        <div>
+          <label>Set-Aside</label>
+          <select id="f-setaside">
+            <option value="">All set-asides</option>
+            <option value="SBA">Small Business</option>
+            <option value="8A">8(a) Program</option>
+            <option value="HZC">HUBZone</option>
+            <option value="SDVOSBC">SDVOSB</option>
+            <option value="WOSB">Women-Owned SB</option>
+          </select>
+        </div>
+        <div>
+          <label>NAICS Code</label>
+          <select id="f-naics">
+            <option value="">All NAICS codes</option>
+            <option value="332710">332710 — Machine Shops</option>
+            <option value="332431">332431 — Metal Can Manufacturing</option>
+            <option value="332439">332439 — Other Metal Container Manufacturing</option>
+            <option value="332510">332510 — Hardware Manufacturing</option>
+            <option value="332721">332721 — Precision Turned Product Manufacturing</option>
+            <option value="332999">332999 — All Other Misc. Fabricated Metal Products</option>
+            <option value="333514">333514 — Special Die, Tool, Jig &amp; Fixture Manufacturing</option>
+            <option value="333613">333613 — Mechanical Power Transmission Equipment</option>
+            <option value="336350">336350 — Motor Vehicle Transmission &amp; Power Train Parts</option>
+            <option value="336413">336413 — Other Aircraft Parts &amp; Auxiliary Equipment</option>
+            <option value="336992">336992 — Military Armored Vehicle &amp; Tank Components</option>
+          </select>
+        </div>
+        <div>
+          <label>Posted Within</label>
+          <select id="f-days">
+            <option value="30">Last 30 days</option>
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="search-results">
+      <div class="empty">Enter keywords above and click Search to find opportunities.</div>
+    </div>
+  </div>
+
+  <!-- Saved Tab -->
+  <div id="tab-saved" style="display:none">
+    <div id="saved-results">
+      <div class="empty">No saved opportunities yet. Search and bookmark ones that look promising.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Save Modal -->
+<div class="modal-overlay" id="save-modal">
+  <div class="modal">
+    <h3>&#128278; Save Opportunity</h3>
+    <div class="modal-field">
+      <label>Stage</label>
+      <select id="m-stage">
+        <option value="Identified">Identified</option>
+        <option value="Reviewing">Reviewing</option>
+        <option value="Bid/No-Go Decision">Bid/No-Go Decision</option>
+        <option value="Proposal Writing">Proposal Writing</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Assigned To</label>
+      <input type="text" id="m-assigned" placeholder="Team member name…" />
+    </div>
+    <div class="modal-field">
+      <label>Notes</label>
+      <input type="text" id="m-notes" placeholder="Any notes or comments…" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sm" onclick="closeModal()" style="background:#eee;color:#333">Cancel</button>
+      <button class="btn btn-success btn-sm" onclick="confirmSave()">Save to Catalog</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TENANT_ID = '{{TENANT_ID}}';
+const CLIENT_ID = '{{CLIENT_ID}}';
+
+let cfg = {};
+let accessToken = '';
+let tokenExpiry = 0;
+let pendingOpp = null;
+let savedOpps = JSON.parse(localStorage.getItem('sam_saved_v2') || '[]');
+
+function saveConfig() {
+  cfg = {
+    apiKey: document.getElementById('cfg-apikey').value.trim(),
+    spSite: document.getElementById('cfg-spsite').value.trim(),
+    spList: document.getElementById('cfg-splist').value.trim(),
+    clientId: document.getElementById('cfg-clientid').value.trim(),
+    tenantId: document.getElementById('cfg-tenantid').value.trim(),
+  };
+  if (!cfg.apiKey) { showStatus('Please enter your SAM.gov API key.', 'error'); return; }
+  localStorage.setItem('sam_config', JSON.stringify(cfg));
+  document.getElementById('config-status').textContent = 'Configured ✓';
+  document.getElementById('config-status').className = 'config-status config-ok';
+  showStatus('Configuration saved.', 'success');
+}
+
+function loadConfig() {
+  const saved = localStorage.getItem('sam_config');
+  if (saved) {
+    cfg = JSON.parse(saved);
+    if (cfg.apiKey) document.getElementById('cfg-apikey').value = cfg.apiKey;
+    if (cfg.spSite) document.getElementById('cfg-spsite').value = cfg.spSite;
+    if (cfg.spList) document.getElementById('cfg-splist').value = cfg.spList;
+    if (cfg.clientId) document.getElementById('cfg-clientid').value = cfg.clientId;
+    if (cfg.tenantId) document.getElementById('cfg-tenantid').value = cfg.tenantId;
+    document.getElementById('config-status').textContent = 'Configured ✓';
+    document.getElementById('config-status').className = 'config-status config-ok';
+  }
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg;
+  el.className = `status-bar status-${type}`;
+  el.style.display = 'block';
+  if (type !== 'error') setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function switchTab(name, btn) {
+  document.getElementById('tab-search').style.display = name === 'search' ? '' : 'none';
+  document.getElementById('tab-saved').style.display = name === 'saved' ? '' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (name === 'saved') renderSaved();
+}
+
+async function search() {
+  const kw = document.getElementById('kw').value.trim();
+  if (!kw) { showStatus('Please enter at least one keyword.', 'error'); return; }
+  if (!cfg.apiKey) { showStatus('Please save your SAM.gov API key in Configuration first.', 'error'); return; }
+
+  const el = document.getElementById('search-results');
+  el.innerHTML = '<div class="loading">&#128269; Searching SAM.gov…</div>';
+
+  try {
+    const days = document.getElementById('f-days').value;
+    const type = document.getElementById('f-type').value;
+    const setaside = document.getElementById('f-setaside').value;
+    const naics = document.getElementById('f-naics').value;
+    const from = new Date(Date.now() - days * 86400000).toISOString().slice(0,10).replace(/-/g,'/');
+
+    let url = `https://api.sam.gov/opportunities/v2/search?api_key=${cfg.apiKey}&keyword=${encodeURIComponent(kw)}&postedFrom=${from}&limit=25`;
+    if (type) url += `&ptype=${type}`;
+    if (setaside) url += `&ncode=${setaside}`;
+    if (naics) url += `&naics=${naics}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`SAM.gov error: ${res.status}`);
+    const data = await res.json();
+
+    const opps = (data.opportunitiesData || []).map(o => ({
+      id: o.noticeId,
+      title: o.title || 'Untitled',
+      agency: o.fullParentPathName || o.organizationHierarchy?.[0]?.name || 'N/A',
+      type: o.type || '',
+      setAside: o.typeOfSetAsideDescription || '',
+      naics: o.naicsCode || '',
+      posted: (o.postedDate || '').slice(0,10),
+      due: (o.responseDeadLine || o.archiveDate || '').slice(0,10) || 'TBD',
+      solicitationNumber: o.solicitationNumber || '',
+      link: `https://sam.gov/opp/${o.noticeId}/view`,
+      estimatedValue: ''
+    }));
+
+    renderResults(opps, el);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">Error: ${e.message}. Check your API key and try again.</div>`;
+  }
+}
+
+function renderResults(opps, el) {
+  if (!opps.length) { el.innerHTML = '<div class="empty">No results found. Try different keywords or broaden your filters.</div>'; return; }
+  let html = `<div class="results-header"><span>${opps.length} result${opps.length !== 1 ? 's' : ''} found</span></div>`;
+  opps.forEach(o => {
+    const isSaved = savedOpps.find(s => s.id === o.id);
+    const days = daysUntil(o.due);
+    const dueCls = days !== null && days <= 7 ? 'due-urgent' : days !== null && days <= 14 ? 'due-soon' : '';
+    const dueStr = o.due === 'TBD' ? 'No deadline' : days !== null ? `Due ${o.due} (${days}d)` : `Due ${o.due}`;
+    html += `<div class="opp-card${isSaved ? ' saved' : ''}">
+      <div class="opp-top">
+        <div class="opp-title">${o.title}</div>
+        <div class="opp-actions">
+          <button class="btn btn-sm ${isSaved ? 'btn-success' : 'btn-primary'}" onclick='openModal(${JSON.stringify(o).replace(/'/g,"&#39;")})'>${isSaved ? '✓ Saved' : '+ Save'}</button>
+          <a class="btn btn-sm" style="background:#eee;color:#333;text-decoration:none" href="${o.link}" target="_blank">View ↗</a>
+        </div>
+      </div>
+      <div class="opp-meta">
+        ${o.type ? `<span class="badge badge-blue">${o.type}</span>` : ''}
+        ${o.setAside ? `<span class="badge badge-purple">${o.setAside}</span>` : ''}
+        ${o.naics ? `<span class="badge badge-gray">NAICS ${o.naics}</span>` : ''}
+        ${o.solicitationNumber ? `<span class="badge badge-gray">${o.solicitationNumber}</span>` : ''}
+      </div>
+      <div class="opp-footer">
+        <span>&#127970; ${o.agency}</span>
+        <span class="${dueCls}">&#128197; ${dueStr}</span>
+      </div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function daysUntil(dateStr) {
+  if (!dateStr || dateStr === 'TBD') return null;
+  return Math.ceil((new Date(dateStr) - Date.now()) / 86400000);
+}
+
+function openModal(opp) {
+  pendingOpp = opp;
+  document.getElementById('m-stage').value = 'Identified';
+  document.getElementById('m-assigned').value = '';
+  document.getElementById('m-notes').value = '';
+  document.getElementById('save-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('save-modal').classList.remove('open');
+  pendingOpp = null;
+}
+
+async function confirmSave() {
+  if (!pendingOpp) return;
+  const opp = {
+    ...pendingOpp,
+    stage: document.getElementById('m-stage').value,
+    assignedTo: document.getElementById('m-assigned').value,
+    notes: document.getElementById('m-notes').value,
+    savedAt: new Date().toISOString().slice(0,10)
+  };
+
+  closeModal();
+  showStatus('Saving to SharePoint catalog…', 'info');
+
+  // Save locally
+  const idx = savedOpps.findIndex(s => s.id === opp.id);
+  if (idx > -1) savedOpps[idx] = opp; else savedOpps.push(opp);
+  localStorage.setItem('sam_saved_v2', JSON.stringify(savedOpps));
+  updateSavedCount();
+
+  // Save to SharePoint list
+  try {
+    const token = await getToken();
+    await saveToSharePoint(opp, token);
+    showStatus('✓ Saved to catalog and syncing to Excel via Power Automate!', 'success');
+  } catch(e) {
+    showStatus(`Saved locally. SharePoint sync failed: ${e.message} — you can export CSV as backup.`, 'error');
+  }
+
+  // Refresh search results
+  const kw = document.getElementById('kw').value.trim();
+  if (kw) search();
+}
+
+async function getToken() {
+  if (accessToken && Date.now() < tokenExpiry) return accessToken;
+  const spSite = cfg.spSite || document.getElementById('cfg-spsite').value.trim();
+  const clientId = cfg.clientId || document.getElementById('cfg-clientid').value.trim();
+  const tenantId = cfg.tenantId || document.getElementById('cfg-tenantid').value.trim();
+
+  // Use MSAL implicit flow via redirect
+  const scope = encodeURIComponent('https://graph.microsoft.com/Sites.ReadWrite.All');
+  const redirectUri = encodeURIComponent(window.location.href.split('?')[0]);
+  const authUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${scope}&response_mode=fragment`;
+
+  // Check if we have token in URL fragment from redirect
+  const hash = window.location.hash;
+  if (hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.slice(1));
+    accessToken = params.get('access_token');
+    tokenExpiry = Date.now() + (parseInt(params.get('expires_in')) * 1000);
+    window.location.hash = '';
+    return accessToken;
+  }
+
+  // Redirect to auth
+  window.location.href = authUrl;
+  throw new Error('Redirecting to sign in…');
+}
+
+async function saveToSharePoint(opp, token) {
+  const spSite = cfg.spSite || document.getElementById('cfg-spsite').value.trim();
+  const spList = cfg.spList || document.getElementById('cfg-splist').value.trim();
+
+  // Get site ID
+  const hostname = new URL(spSite).hostname;
+  const sitePath = new URL(spSite).pathname;
+  const siteRes = await fetch(`https://graph.microsoft.com/v1.0/sites/${hostname}:${sitePath}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!siteRes.ok) throw new Error('Could not access SharePoint site');
+  const siteData = await siteRes.json();
+
+  // Get list ID
+  const listRes = await fetch(`https://graph.microsoft.com/v1.0/sites/${siteData.id}/lists?$filter=displayName eq '${encodeURIComponent(spList)}'`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const listData = await listRes.json();
+  if (!listData.value?.length) throw new Error('SharePoint list not found');
+  const listId = listData.value[0].id;
+
+  // Add item
+  const item = {
+    fields: {
+      Title: opp.title,
+      Agency: opp.agency,
+      NoticeType: opp.type,
+      SetAside: opp.setAside,
+      NAICSCode: opp.naics,
+      PostedDate: opp.posted,
+      ResponseDue: opp.due,
+      EstimatedValue: opp.estimatedValue || '',
+      SolicitationNumber: opp.solicitationNumber,
+      SAMLink: opp.link,
+      Notes: opp.notes || '',
+      Stage: opp.stage,
+      AssignedTo: opp.assignedTo || ''
+    }
+  };
+
+  const addRes = await fetch(`https://graph.microsoft.com/v1.0/sites/${siteData.id}/lists/${listId}/items`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  });
+  if (!addRes.ok) {
+    const err = await addRes.json();
+    throw new Error(err.error?.message || 'Failed to add item');
+  }
+}
+
+function renderSaved() {
+  const el = document.getElementById('saved-results');
+  if (!savedOpps.length) { el.innerHTML = '<div class="empty">No saved opportunities yet.</div>'; return; }
+  let html = `<div class="results-header"><span>${savedOpps.length} saved opportunity${savedOpps.length !== 1 ? 'ies' : 'y'}</span><button class="btn btn-sm btn-primary" onclick="exportCSV()">&#128190; Export CSV</button></div>`;
+  savedOpps.forEach(o => {
+    const days = daysUntil(o.due);
+    const dueCls = days !== null && days <= 7 ? 'due-urgent' : days !== null && days <= 14 ? 'due-soon' : '';
+    html += `<div class="opp-card saved">
+      <div class="opp-top">
+        <div class="opp-title">${o.title}</div>
+        <div class="opp-actions">
+          <button class="btn btn-sm btn-danger" onclick="removeSaved('${o.id}')">Remove</button>
+          <a class="btn btn-sm" style="background:#eee;color:#333;text-decoration:none" href="${o.link}" target="_blank">View ↗</a>
+        </div>
+      </div>
+      <div class="opp-meta">
+        ${o.type ? `<span class="badge badge-blue">${o.type}</span>` : ''}
+        ${o.stage ? `<span class="badge badge-green">${o.stage}</span>` : ''}
+        ${o.assignedTo ? `<span class="badge badge-gray">&#128100; ${o.assignedTo}</span>` : ''}
+      </div>
+      <div class="opp-footer">
+        <span>&#127970; ${o.agency}</span>
+        <span class="${dueCls}">&#128197; ${o.due === 'TBD' ? 'No deadline' : `Due ${o.due}${days !== null ? ` (${days}d)` : ''}`}</span>
+      </div>
+      ${o.notes ? `<div style="margin-top:8px;font-size:12px;color:#555;border-top:1px solid #eee;padding-top:8px">&#128221; ${o.notes}</div>` : ''}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function removeSaved(id) {
+  savedOpps = savedOpps.filter(o => o.id !== id);
+  localStorage.setItem('sam_saved_v2', JSON.stringify(savedOpps));
+  updateSavedCount();
+  renderSaved();
+}
+
+function updateSavedCount() {
+  document.getElementById('saved-count').textContent = savedOpps.length;
+}
+
+function exportCSV() {
+  if (!savedOpps.length) return;
+  const cols = ['title','agency','type','setAside','naics','posted','due','solicitationNumber','stage','assignedTo','notes','link'];
+  const rows = [cols.join(','), ...savedOpps.map(o => cols.map(c => `"${(o[c]||'').replace(/"/g,'""')}"`).join(','))];
+  const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'sam_opportunities.csv'; a.click();
+}
+
+// Check for auth redirect token on page load
+function checkAuthRedirect() {
+  const hash = window.location.hash;
+  if (hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.slice(1));
+    accessToken = params.get('access_token');
+    tokenExpiry = Date.now() + (parseInt(params.get('expires_in')) * 1000);
+    window.location.hash = '';
+    showStatus('✓ Signed in to Microsoft — ready to sync to SharePoint.', 'success');
+  }
+}
+
+loadConfig();
+updateSavedCount();
+checkAuthRedirect();
+</script>
+</body>
+</html>
